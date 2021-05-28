@@ -1,0 +1,11 @@
+{
+  "name": "phonebook-back-end",
+  "version": "0.0.1",
+  "description": "back end for phonebook app created through full stack open curriculum",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
