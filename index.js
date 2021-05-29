@@ -1,12 +1,15 @@
 const express = require('express');
 const morgan = require('morgan');
+const cors = require('cors');
 const app = express();
-
 morgan.token('body', req => JSON.stringify(req.body));
 
+// JSON parser
 app.use(express.json());
-
+// log request body when POSTing
 app.use(morgan(':method :url :response-time ms :body'));
+// allow for Cross Origin Ressource Sharing
+app.use(cors());
 
 let persons = [
   {
@@ -116,27 +119,3 @@ app.listen(PORT, () => {
 // };
 
 // app.use(requestLogger);
-// const customLog = morgan(function (tokens, req, res) {
-//   console.log(tokens.method(req, res));
-
-//   if (tokens.method(req, res) === 'GET') {
-//     return [
-//       tokens.method(req, res),
-//       tokens.url(req, res),
-//       tokens.status(req, res),
-//       tokens.res(req, res, 'content-length'),
-//       '-',
-//       tokens['response-time'](req, res),
-//       'ms',
-//     ].join(' ');
-//   }
-//   return [
-//     tokens.method(req, res),
-//     tokens.url(req, res),
-//     tokens.status(req, res),
-//     tokens.res(req, res, 'content-length'),
-//     '-',
-//     tokens['response-time'](req, res),
-//     'ms',
-//   ].join(' ');
-// });
