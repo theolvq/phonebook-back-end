@@ -11,6 +11,8 @@ app.use(morgan(':method :url :response-time ms :body'));
 // allow for Cross Origin Ressource Sharing
 app.use(cors());
 
+app.use(express.static('build'));
+
 let persons = [
   {
     name: 'Arto Hellas',
