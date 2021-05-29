@@ -1,7 +1,7 @@
-POST http://localhost:3002/api/persons
+POST http://localhost:3001/api/persons
 Content-Type: application/json
 
 {
-  "name": "Theo Leveque",
-  "number": "604-354-8946"
+  "name": "Kristina RadMama",
+  "number": "604-354-6969"
 }
