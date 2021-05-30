@@ -18,30 +18,25 @@ mongoose.connect(url, {
   useCreateIndex: true,
 });
 
-const contactSchema = new mongoose.Schema({
+const personSchema = new mongoose.Schema({
   name: String,
   number: Number,
 });
 
-const Contact = mongoose.model('Contact', contactSchema);
+const Person = mongoose.model('Contact', personSchema);
 
-const contact = new Contact({
+const person = new Person({
   name: process.argv[3],
   number: process.argv[4],
 });
 
-// const contact = new Contact({
-//   name: 'Lily Leveque',
-//   number: 6043548946,
-// });
-
 if (process.argv.length === 3) {
-  Contact.find({}).then(result => {
-    result.forEach(contact => console.log(contact.name, contact.number));
+  Person.find({}).then(result => {
+    result.forEach(person => console.log(person.name, person.number));
     mongoose.connection.close();
   });
 } else if (process.argv.length > 3) {
-  contact.save().then(result => {
+  person.save().then(result => {
     console.log(result);
     console.log('Contact Saved!');
     mongoose.connection.close();

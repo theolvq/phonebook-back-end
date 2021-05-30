@@ -1,84 +1,78 @@
+require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
-const app = express();
-morgan.token('body', req => JSON.stringify(req.body));
+const Contact = require('./models/contact');
 
+const app = express();
+
+// use static build
+app.use(express.static('build'));
 // JSON parser
 app.use(express.json());
-// log request body when POSTing
+// log request body
+morgan.token('body', req => JSON.stringify(req.body));
 app.use(morgan(':method :url :response-time ms :body'));
 // allow for Cross Origin Ressource Sharing
 app.use(cors());
 
-app.use(express.static('build'));
+// const unkownEndpoint = (req, res) => {
+//   res.status(404).send({ error: 'unknown endpoint' });
+// };
 
-let persons = [
-  {
-    name: 'Arto Hellas',
-    number: '040-123456',
-    id: 1,
-  },
-  {
-    name: 'Ada Lovelace',
-    number: '39-44-5323523',
-    id: 2,
-  },
-  {
-    name: 'Dan Abramov',
-    number: '12-43-234345',
-    id: 3,
-  },
-  {
-    name: 'Mary Poppendieck',
-    number: '39-23-6423122',
-    id: 4,
-  },
-];
+// app.use(unkownEndpoint);
 
-// Just checking that server is working
-app.get('/', (req, res) => {
-  res.send('<h1>Welcome to the Phonebook App</h1>');
-});
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' });
+  }
+
+  next(error);
+};
+
+app.use(errorHandler);
 
 // get contact list
 app.get('/api/persons', (req, res) => {
-  res.json(persons);
+  Contact.find({}).then(contacts => {
+    res.json(contacts);
+  });
 });
 
 // get specific contact
-app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const person = persons.find(person => person.id === id);
-  person ? res.json(person) : res.status(404).end();
+app.get('/api/persons/:id', (req, res, next) => {
+  Contact.findById(req.params.id)
+    .then(contact => (contact ? res.json(contact) : res.status(404).end()))
+    .catch(err => next(err));
 });
 
 // get info page with number of contacts in phonebook
 app.get('/info', (req, res) => {
-  res.send(`<p>Phonebook has info for ${persons.length} people</p> 
+  res.send(`<p>Phonebook has info for ${Contact.length} people</p> 
   <p>${new Date()}</p>`);
 });
 
 // delete specific contact
-app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id);
-  persons = persons.filter(person => person.id !== id);
-
-  res.status(204).end();
+app.delete('/api/persons/:id', (req, res, next) => {
+  Contact.findByIdAndRemove(req.params.id)
+    .then(result => res.status(204).end())
+    .catch(err => next(err));
 });
 
 // create id
-const generateId = () => {
+/* const generateId = () => {
   const maxId = persons.length > 0 ? Math.max(...persons.map(p => p.id)) : 0;
   return maxId + 1;
-};
+}; */
 
 // add new contact to the list
 app.post('/api/persons', (req, res) => {
   const body = req.body;
 
   // error checking
-  const alreadyAdded = persons.some(person => person.name === body.name);
+  const alreadyAdded = persons.some(contact => contact.name === body.name);
 
   if (!body.name) {
     return res.status(400).json({
@@ -94,19 +88,19 @@ app.post('/api/persons', (req, res) => {
     });
   }
 
-  // create person object to then add in new array
-  const person = {
+  // create contact object to then add in new array
+  const contact = new Contact({
     name: body.name,
     number: body.number,
-    id: generateId(),
-  };
+    // id: generateId(),
+  });
 
-  persons = persons.concat(person);
-
-  res.json(person);
+  contact.save().then(savedPerson => {
+    res.json(savedPerson);
+  });
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
