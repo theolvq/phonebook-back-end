@@ -17,36 +17,21 @@ app.use(morgan(':method :url :response-time ms :body'));
 app.use(cors());
 
 // add new contact to the list
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   const body = req.body;
-
-  // error checking
-  // const alreadyAdded = Contact.some(contact => contact.name === body.name);
-
-  if (!body.name) {
-    return res.status(400).json({
-      error: 'name missing',
-    });
-  } else if (!body.number) {
-    return res.status(400).json({
-      error: 'number missing',
-    });
-    // } else if (alreadyAdded) {
-    //   return res.status(400).json({
-    //     error: 'name already added',
-    //   });
-  }
 
   // create contact object to then add in new array
   const contact = new Contact({
     name: body.name,
     number: body.number,
-    // id: generateId(),
   });
 
-  contact.save().then(savedPerson => {
-    res.json(savedPerson);
-  });
+  contact
+    .save()
+    .then(savedPerson => {
+      res.json(savedPerson.toJSON());
+    })
+    .catch(err => next(err));
 });
 // const unkownEndpoint = (req, res) => {
 //   res.status(404).send({ error: 'unknown endpoint' });
@@ -59,6 +44,8 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' });
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message });
   }
 
   next(error);
@@ -101,7 +88,11 @@ app.put('/api/persons/:id', (req, res, next) => {
     name: body.name,
     number: body.number,
   };
-  Contact.findByIdAndUpdate(req.params.id, contact, { new: true })
+  Contact.findByIdAndUpdate(req.params.id, contact, {
+    new: true,
+    runValidators: true,
+    context: 'query',
+  })
     .then(updatedContact => res.json(updatedContact))
     .catch(err => next(err));
 });
