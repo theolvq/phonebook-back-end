@@ -16,6 +16,38 @@ app.use(morgan(':method :url :response-time ms :body'));
 // allow for Cross Origin Ressource Sharing
 app.use(cors());
 
+// add new contact to the list
+app.post('/api/persons', (req, res) => {
+  const body = req.body;
+
+  // error checking
+  // const alreadyAdded = Contact.some(contact => contact.name === body.name);
+
+  if (!body.name) {
+    return res.status(400).json({
+      error: 'name missing',
+    });
+  } else if (!body.number) {
+    return res.status(400).json({
+      error: 'number missing',
+    });
+    // } else if (alreadyAdded) {
+    //   return res.status(400).json({
+    //     error: 'name already added',
+    //   });
+  }
+
+  // create contact object to then add in new array
+  const contact = new Contact({
+    name: body.name,
+    number: body.number,
+    // id: generateId(),
+  });
+
+  contact.save().then(savedPerson => {
+    res.json(savedPerson);
+  });
+});
 // const unkownEndpoint = (req, res) => {
 //   res.status(404).send({ error: 'unknown endpoint' });
 // };
@@ -61,43 +93,17 @@ app.delete('/api/persons/:id', (req, res, next) => {
     .catch(err => next(err));
 });
 
-// create id
-/* const generateId = () => {
-  const maxId = persons.length > 0 ? Math.max(...persons.map(p => p.id)) : 0;
-  return maxId + 1;
-}; */
-
-// add new contact to the list
-app.post('/api/persons', (req, res) => {
+// update contact's number if already present in the db
+app.put('/api/persons/:id', (req, res, next) => {
   const body = req.body;
 
-  // error checking
-  const alreadyAdded = persons.some(contact => contact.name === body.name);
-
-  if (!body.name) {
-    return res.status(400).json({
-      error: 'name missing',
-    });
-  } else if (!body.number) {
-    return res.status(400).json({
-      error: 'number missing',
-    });
-  } else if (alreadyAdded) {
-    return res.status(400).json({
-      error: 'name already added',
-    });
-  }
-
-  // create contact object to then add in new array
-  const contact = new Contact({
+  const contact = {
     name: body.name,
     number: body.number,
-    // id: generateId(),
-  });
-
-  contact.save().then(savedPerson => {
-    res.json(savedPerson);
-  });
+  };
+  Contact.findByIdAndUpdate(req.params.id, contact, { new: true })
+    .then(updatedContact => res.json(updatedContact))
+    .catch(err => next(err));
 });
 
 const PORT = process.env.PORT;
